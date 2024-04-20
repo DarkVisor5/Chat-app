@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getAuth, signInAnonymously } from "firebase/auth";
 import {
   View,
   Text,
@@ -45,11 +46,26 @@ export default function Start({ navigation }) {
   const [backgroundColor, setBackgroundColor] = useState(colors.black);
   const [isFocusedOrNotEmpty, setIsFocusedOrNotEmpty] = useState(false);
 
+  const handleStartChatting = () => {
+    const auth = getAuth();
+    signInAnonymously(auth)
+      .then(result => {
+        navigation.navigate('Chat', { 
+          uid: result.user.uid, // user ID from the authentication result
+          name: name, // user's chosen name
+          backgroundColor: backgroundColor // user's selected background color
+        });
+      })
+      .catch(error => {
+        console.error("Failed to sign in anonymously", error);
+      });
+  };
 
   return (
     <View style={styles.container}>
       <ImageBackground
         source={require('../assets/backg.png')}
+        resizeMode="cover"
         style={styles.imageBackground}
       >
         <Text style={styles.title}>App Title</Text>
@@ -73,25 +89,20 @@ export default function Start({ navigation }) {
               placeholder="Your Name"
               placeholderTextColor="#75708350"
             />
-
           </View>
           <View style={styles.colorContainer}>
             <Text style={styles.colorText}>Choose Background Color:</Text>
             <ColorSelector onSelectColor={setBackgroundColor} selectedColor={backgroundColor} />
           </View>
-
           <TouchableOpacity
             style={styles.button}
-            onPress={() => {
-              navigation.navigate('Chat', { name, backgroundColor });
-            }}
+            onPress={handleStartChatting}
           >
             <Text style={styles.buttonText}>Start Chatting</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
     </View>
-
   );
 }
 
@@ -117,14 +128,13 @@ const styles = StyleSheet.create({
     height: '44%',
     backgroundColor: 'white',
     alignItems: 'center',
-    justifyContent: 'space-between', // Adjust space distribution
+    justifyContent: 'space-between',
     padding: '6%',
     position: 'absolute',
     bottom: '6%',
     left: '6%',
     right: '6%',
   },
-  
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -133,9 +143,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
     borderRadius: 2,
-    marginBottom: 20, // Keep or adjust based on space needed
+    marginBottom: 20,
   },
-  
   inputIcon: {
     marginRight: 10,
     width: 24,
@@ -152,15 +161,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '88%',
   },
-  colorButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginHorizontal: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
   colorButtonWrapper: {
     padding: 2,
     borderRadius: 24,
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   selectedColorWrapper: {
     borderColor: '#757083',
     borderWidth: 2,
-    borderRadius: 24
+    borderRadius: 24,
   },
   colorButton: {
     width: 40,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   button: {
-    backgroundColor: '#474056', // Ensure it's visible
+    backgroundColor: '#474056',
     width: '100%',
     padding: 15,
     justifyContent: 'center',
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   colorContainer: {
     alignSelf: 'stretch',
     alignItems: 'center',
-    marginTop: 10,  // Add top margin if needed
+    marginTop: 10,
   },
   colorText: {
     fontSize: 16,
@@ -204,9 +204,5 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingLeft: '6%',
   },
-  colorSelector: {
-  flexDirection: 'row',
-  justifyContent: 'center',  // Centers the color buttons in the container
-  width: '100%',  // Use full width of the container
-},
 });
+

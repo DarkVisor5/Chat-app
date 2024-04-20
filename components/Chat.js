@@ -1,44 +1,39 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { Bubble, GiftedChat } from "react-native-gifted-chat";
+import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 
-// Main component for Chat functionality
-const Chat = ({ route, navigation }) => {
-  // State to hold messages
+const Chat = ({ route, navigation, db }) => {
   const [messages, setMessages] = useState([]);
   const { name } = route.params;
 
-  // Effect for setting initial messages and navigation title
   useEffect(() => {
-    navigation.setOptions({ title: name })
-    setMessages([
-      {
-        _id: 1,
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
-        },
-      },
-      {
-        _id: 2,
-        text: 'You’ve entered the chat',
-        createdAt: new Date(),
-        system: true,
-      },
-    ]);
-  }, [navigation, name]);
+    const messagesCollection = collection(db, "messages");
+    const q = query(messagesCollection, orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const messagesFirestore = querySnapshot.docs.map(doc => ({
+        _id: doc.id,
+        text: doc.data().text,
+        createdAt: new Date(doc.data().createdAt.seconds * 1000),
+        user: doc.data().user
+      })).reverse();
+      setMessages(messagesFirestore);
+    });
+    return () => unsubscribe();
+  }, [db]);
 
-  // Callback for sending messages
-  const onSend = useCallback((newMessages) => {
-    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
-  }, []);
+  const onSend = useCallback((newMessages = []) => {
+    const { _id, createdAt, text, user } = newMessages[0];
+    addDoc(collection(db, "messages"), {
+      _id,
+      createdAt,
+      text,
+      user
+    });
+  }, [db]);
 
-  // Custom render for message bubbles
-  const renderBubble = useCallback((props) => {
-    return <Bubble
+  const renderBubble = useCallback((props) => (
+    <Bubble
       {...props}
       wrapperStyle={{
         right: {
@@ -49,30 +44,45 @@ const Chat = ({ route, navigation }) => {
         }
       }}
     />
-  }, []);
+  ), []);
 
-  // Render the chat interface
   return (
-    <View style={styles.container}>
-      <GiftedChat
-        messages={messages}
-        renderBubble={renderBubble}
-        onSend={messages => onSend(messages)}
-        user={{
-          _id: 1,
-          name
-        }}
-      />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      />
-    </View>
+    <Fragment>
+      {Platform.OS === 'android' ? (
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior="padding" // Changed from "height" to "padding"
+          keyboardVerticalOffset={Platform.OS === 'android' ? 80 : 0} // Approximate offset
+        >
+          <View style={styles.container}>
+            <GiftedChat
+              messages={messages}
+              renderBubble={renderBubble}
+              onSend={messages => onSend(messages)}
+              user={{
+                _id: route.params.uid,
+                name
+              }}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      ) : (
+        <View style={styles.container}>
+          <GiftedChat
+            messages={messages}
+            renderBubble={renderBubble}
+            onSend={messages => onSend(messages)}
+            user={{
+              _id: route.params.uid,
+              name
+            }}
+          />
+        </View>
+      )}
+    </Fragment>
   );
-}
+};
 
-// Styles for the chat container
 const styles = StyleSheet.create({
   container: {
     flex: 1
@@ -80,4 +90,5 @@ const styles = StyleSheet.create({
 });
 
 export default Chat;
+
 
