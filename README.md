@@ -40,7 +40,7 @@ npm install
 
 Run the app with the following command:
 
-expo start
+npm start
 
 
 Ensure you have Node.js, Expo CLI, and React Native installed to run the app correctly.
