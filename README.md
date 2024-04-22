@@ -31,9 +31,31 @@ The app aims to facilitate communication for users through a native mobile exper
 
 Clone the repository and install the dependencies to get started:
 
-git clone [repository link]
-cd [repository name]
+git clone [\[repository link\]](https://github.com/DarkVisor5/Chat-app.git)
+cd Chat-app
 npm install
+
+## Development Environment Setup
+
+Install Node.js, Expo CLI, Android Studio, and XCode:
+
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install Expo CLI
+npm install -g expo-cli
+
+# Install Android Studio and XCode from their respective websites
+
+## Database Configuration
+
+echo "Update firebaseConfig in your project with your Firebase credentials"
+
+## Install Necessary Libraries
+
+npm install @react-navigation/native
+expo install react-native-maps expo-location expo-image-picker
 
 
 ## Running the App
